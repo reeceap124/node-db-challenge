@@ -3,17 +3,17 @@ exports.up = function(knex) {
   return knex.schema.createTable('projects', tbl=>{
       tbl.increments('id');
       tbl.string('projectName')
-        .notnullable()
+        .notNullable();
       tbl.text('projectDescription')
       tbl.boolean('completed')
-        .notnullable()
-        .defaultTo(false)
+        .notNullable()
+        .defaultTo(false);
   })
   
   .createTable('resources', tbl => {
       tbl.increments('id');
       tbl.string('resourceName')
-        .notnullable()
+        .notNullable()
         .unique();
       tbl.text('resourceDescription');  
   })
@@ -22,13 +22,13 @@ exports.up = function(knex) {
       tbl.increments('id');
       tbl.integer('projectKey')
         .unsigned()
-        .notnullable()
+        .notNullable()
         .references('id').inTable('projects')
         .onUpdate('CASCADE')
         .onDelete('RESTRICT');
       tbl.integer('resourceKey')
         .unsigned()
-        .notnullable()
+        .notNullable()
         .references('id').inTable('resources')
         .onUpdate('CASCADE')
         .onDelete('RESTRICT');
@@ -38,15 +38,15 @@ exports.up = function(knex) {
       tbl.increments('id');
       tbl.integer('projectKey')
         .unsigned()
-        .notnullable()
+        .notNullable()
         .references('id').inTable('projects')
         .onUpdate('CASCADE')
         .onDelete('RESTRICT');
       tbl.text('taskDescription')
-        .notnullable();
+        .notNullable();
       tbl.text('notes');
       tbl.boolean('completed')
-        .notnullable()
+        .notNullable()
         .defaultTo(false);
   })
 };
