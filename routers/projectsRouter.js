@@ -12,9 +12,25 @@ router.get('/projects', (req, res) => {
 })
 
 router.get('/projects/:id', (req, res)=>{
-    Projects.getProjectById(req.params.id)
+    const id = req.params.id
+    Projects.getProjectById(id)
         .then(project=>{
-            res.status(200).json(project)
+            Projects.getProjectTasks(id)
+                .then(tasks => {
+                    Projects.getProjectResources(id)
+                        .then(resources=>{
+                            let taskArray = []
+                            let resourceArray = []
+                            if(tasks.length){
+                                taskArray = [tasks]
+                            }
+                            if(resources.length){
+                                resourceArray = [resources]
+                            }
+                            res.status(200).json({...project[0], taskList: taskArray, resourceList: resourceArray})
+                        })
+                })
+            
         })
         .catch(err => {
             res.status(500).json({ message: 'Failed' });
@@ -63,14 +79,53 @@ router.post('/projects', (req, res)=>{
         });
 })
 
+
+//checks if resource exists, and if not adds it to resources
 router.post('/projects/:id/resources', (req, res)=>{
-    Projects.addProjectResource(req.params.id, req.body)
-        .then(resource=>{
-            res.status(201).json(resource)
+    const id = req.params.id
+    const resource = req.body
+    //request to find any resources by the given resourceName
+    Projects.getResourceByName(resource)
+        .then(availResource=>{
+            //if one is found (i.e. .length > 0) then adds project resource
+            if (availResource.length > 0) {
+                Projects.addProjectResource(id, availResource)
+                    .then(added=>{
+                        res.status(201).json(added)
+                    })
+                    .catch(()=>{
+                        res.status(500).json({error: 'Failed to add resource From name'})
+                    })
+              //if length is not greater than 0 then adds resource and adds to project resource  
+            }  else {
+                Projects.addResource(resource)
+                    .then(addedId=>{
+                        //only id is returned in addResource, so need to get the whole resource. may want to change in future iteration of model
+                        Projects.getResourceById(addedId[0])
+                            .then(addedR=>{
+                                Projects.addProjectResource(id, addedR)
+                                    //adding resource here
+                                    .then(newPR=>{
+                                        res.status(201).json(newPR)
+                                    })
+                                    .catch(()=>{
+                                        res.status(500).json({error: 'Failed to add from newly created Resource'})
+                                    })
+                            })
+                            .catch(()=>{
+                                res.status(500).json({error: 'Failed to get resource by Id'})
+                            })
+                        
+                    })
+                    .catch(()=>{
+                        res.status(500).json({error: 'Failed to create new resouce'})
+                    })
+            }
         })
         .catch(()=>{
-            res.status(500).json({message: 'Failed'})
+            res.status(500).json({error: 'Failed'})
         })
+
 })
 
 router.post('/resources', (req, res)=>{

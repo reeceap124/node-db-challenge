@@ -4,6 +4,8 @@ module.exports = {
     getProjectById,
     addProject,
     getAllResources,
+    getResourceById,
+    getResourceByName,
     getProjectResources,
     addResource,
     addProjectResource,
@@ -34,6 +36,10 @@ function getAllResources(){
     return db('resources')
 }
 
+function getResourceById(id){
+    return db('resources').where({id})
+}
+
 function getProjectResources(id){
     return db.select('pr.id', 'r.resourceName', 'p.projectName')
         .from('projects_resources as pr')
@@ -47,16 +53,20 @@ function addResource(resource){
     return db('resources').insert(resource)
 }
 
+function getResourceByName(resource){
+    return db('resources').where({resourceName: resource.resourceName})
+}
+
 function addProjectResource(id, pr){
         const newId = parseInt(id)
-
         return db('projects_resources').insert({
             projectKey: newId, 
-            resourceKey: (db.select('id')
-                .from('resources')
-                .where('resourceName', pr.resourceName)
-            )
+            resourceKey: pr[0].id
         })
+
+        //trying to figure out how to verify truth of whether or not a resource exists
+        //may have to do in routing with middleware.
+
         // if((db('resources').where('resourceName', pr.resourceName))) {
         //     console.log('inside if statement')
         //     return db('projects_resources').insert({
@@ -97,16 +107,4 @@ function addTask(id, task){
         notes: task.notes
     })
 }
-
-
-// function addProjectResource(id, pr){
-//     const newId = parseInt(id)
-
-//     return db('projects_resources').insert({
-//         projectKey: newId, 
-//         resourceKey: (db.select('id')
-//             .from('resources')
-//             .where('resourceName', pr.resourceName)
-//         )
-//     })
 
